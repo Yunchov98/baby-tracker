@@ -1,5 +1,4 @@
 name: Deploy to Firebase Hosting on merge
-
 on:
     push:
         branches:
@@ -8,12 +7,10 @@ on:
 jobs:
     build_and_deploy:
         runs-on: ubuntu-latest
-
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
-            - name: Set up Node
+            - name: Use Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: 20
@@ -22,10 +19,8 @@ jobs:
               working-directory: ./client
               run: npm ci
 
-            # 👇 Ето тук добавяш блока с environment variables
-            - name: Build Angular app
+            - name: Generate environment file
               working-directory: ./client
-              run: npm run build
               env:
                   FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
                   FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
@@ -34,12 +29,27 @@ jobs:
                   FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
                   FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
                   FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+              run: |
+                  echo "export const environment = {
+                    production: true,
+                    firebase: {
+                      apiKey: '${FIREBASE_API_KEY}',
+                      authDomain: '${FIREBASE_AUTH_DOMAIN}',
+                      databaseURL: '${FIREBASE_DATABASE_URL}',
+                      projectId: '${FIREBASE_PROJECT_ID}',
+                      storageBucket: '${FIREBASE_STORAGE_BUCKET}',
+                      messagingSenderId: '${FIREBASE_MESSAGING_SENDER_ID}',
+                      appId: '${FIREBASE_APP_ID}'
+                    }
+                  };" > ./src/environments/environment.prod.ts
 
-            - name: Deploy to Firebase Hosting
-              uses: FirebaseExtended/action-hosting-deploy@v0
+            - name: Build Angular app
+              working-directory: ./client
+              run: npm run build
+
+            - uses: FirebaseExtended/action-hosting-deploy@v0
               with:
                   repoToken: ${{ secrets.GITHUB_TOKEN }}
                   firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BABY_TRACKER_7CAA1 }}
                   channelId: live
                   projectId: baby-tracker-7caa1
-                  entryPoint: ./client
