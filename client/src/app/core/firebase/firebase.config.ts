@@ -1,3 +1,9 @@
-import { environment } from '../../../environments/environment.prod';
-
-export const firebaseConfig = environment.firebase;
+export const firebaseConfig = {
+  apiKey: '',
+  authDomain: '',
+  databaseURL: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: '',
+};
